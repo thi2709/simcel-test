@@ -11,14 +11,12 @@ It includes modules for data loading, feature engineering, modeling (XGBoost), a
 ### 1. Modeling
 - Current train/test split cannot model Oct,Nov,Dec seasonality which lower test performance.
 - XGBoost is selected for the interest of time, after training it is found that this is not the optimal solution and is subjected to further improvements.
-- The model performance is currently **overfitting**; it is subject to improvements by including stronger regularization (less dependent on seasonality), more feature engineering (MA price, unit cost, percentage margin, etc.), try alternative learners, train separate forecaster for each SKU, and feature selection.
-- Only the **official model** (`forecaster_xgboost_20250909_221509.pkl`) is used.  
-  It is **hard-coded** in both `optimizer.py` and `pipeline.py`.
-- Price–demand relationship is always **negative** (higher price → lower demand).
+- The model performance is currently overfitting; it is subject to improvements by including stronger regularization (less dependent on seasonality), more feature engineering (MA price, unit cost, percentage margin, etc.), try alternative learners, train separate forecaster for each SKU, modeling price elasticity, and feature selection.
+- Only the **official model** (`forecaster_xgboost_20250909_221509.pkl`) is used accross pipeline. It is **hard-coded** in both `optimizer.py` and `pipeline.py`.
+- Price–demand relationship is monitored to be **negative** (higher price → lower demand).
 
 ### 2. Optimizer
-- Each SKU × Store is capped at **X promo days per horizon** (configured in `constraints.yaml`).  
-  This differs from assumptions in the provided dataset.
+- Each SKU × Store is capped at **X promo days per horizon** (configured in `constraints.yaml`). This differs from assumptions in the provided dataset.
 - Competitor price is assumed equal to base price.
 - `holiday_flag` is set to average (from constraints).
 - `weather_index` is set to average (from constraints).
