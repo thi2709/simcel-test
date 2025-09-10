@@ -1,0 +1,40 @@
+global:
+  # price bounds are relative to each SKU's base_price
+  price_bounds:
+    lower: 0.6
+    upper: 1
+
+  # promo scheduling: maximum promo days per calendar month (per SKU–Store)
+  promo_days_per_month: 5
+
+  # exogenous features defaults
+  holiday_flag_default: 0.0215
+  weather_index_default: 0.5
+
+  # competitor price policy: "equal_base_price" or future variants
+  competitor_price_policy: equal_base_price
+
+  # map month -> season name
+  season_map:
+    winter: [12, 1, 2]
+    spring: [3, 4, 5]
+    summer: [6, 7, 8]
+    autumn: [9, 10, 11]
+
+stores:
+  - S01
+  - S02
+  - S03
+  - S04
+  - S05
+
+skus:
+  SKU001:
+    base_price: 10.49
+    stock_cap: 100
+  SKU002:
+    base_price: 15.49
+    stock_cap: 100
+  SKU003:
+    base_price: 21.99
+    stock_cap: 100

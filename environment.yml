@@ -1,0 +1,21 @@
+name: simceltest
+channels:
+  - conda-forge
+  - defaults
+dependencies:
+  # Core scientific stack
+  - python=3.10
+  - numpy=1.26.4
+  - pandas=2.2.2
+  - scikit-learn=1.4.2
+  - xgboost=2.0.3
+  - pyyaml=6.0.2
+  - matplotlib=3.9.2
+  - ipykernel=6.29.5
+
+  # Testing
+  - pytest=8.2.1
+  - pytest-cov=5.0.0
+
+  # Pip is included for any extras not on conda
+  - pip
