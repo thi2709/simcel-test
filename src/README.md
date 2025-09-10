@@ -3,6 +3,7 @@
 This repository provides a pipeline for **training forecasters**, **simulating sales performance**, and **optimizing prices** across SKUs and stores.  
 It includes modules for data loading, feature engineering, modeling (XGBoost), and a price optimizer using naive greedy grid-search approach and pre-set configurable constraints.
 **EDA analysis** can be found inside notebook `reports.ipynb`.
+
 ---
 
 ## I. Assumptions & Caveats
