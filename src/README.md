@@ -69,7 +69,8 @@ python pipeline.py optimize   --horizon 30   --objective revenue   --start-date 
 
 ## III. Unit Tests
 
-Unit tests live under `src/tests/`.
+- Unit tests live under `src/tests/`.
+- To develop more advanced unit tests, can try to use the small csv file sample
 
 Run all tests:
 
