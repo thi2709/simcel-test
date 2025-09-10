@@ -16,11 +16,12 @@ It includes modules for data loading, feature engineering, modeling (XGBoost), a
 - PPrice–demand relationship is monitored to be negative (higher price → lower demand).
 
 ### 2. Optimizer
-- Each SKU × Store is capped at **X promo days per horizon** (configured in `constraints.yaml`). This differs from assumptions in the provided dataset.
+- Optimizer task chosen is **Maximize revenue subject to price bounds & promo constraints**
 - Competitor price is assumed equal to base price.
 - `holiday_flag` is set to average (from constraints).
 - `weather_index` is set to average (from constraints).
 - `stock_cap` defaults to **100** unless specified per SKU.
+- Each SKU × Store is capped at **X promo days per horizon** (configured in `constraints.yaml`). This differs from assumptions in the provided dataset.
 - Minimum price band is **0.6 × base_price**.
 - The optimizer is greedy: it selects top-K promo days with discrete discount but does not guarantee a global optimum.
 - Dataset assumptions (promo scheduling, stock caps) may not perfectly match real-world data. 
