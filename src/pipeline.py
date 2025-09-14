@@ -38,6 +38,7 @@ from features import generate_feature
 from data_loader import load_data
 from models.modeling import fit as model_fit, validate as model_validate
 from pricing.optimizer import optimize_price_plan
+from models.schema import FEATURE_COLS, TARGET_COL, OFFICIAL_MODEL
 
 # ---------- Paths ----------
 _THIS_DIR = os.path.dirname(os.path.abspath(__file__))
@@ -47,14 +48,14 @@ _DEFAULT_CONSTRAINTS = os.path.join(_PRICING_DIR, "constraints.yaml")
 
 
 # ---------- Constants ----------
-FEATURE_COLS = [
-    "store_id", "sku_id", "base_price", "promo_flag", "promo_depth",
-    "final_price", "competitor_price", "holiday_flag", "weather_index",
-    "day_of_week", "month_of_year", "season",
-    "sold_yesterday", "sold_last_week",
-    "final_price_ln", "competitor_price_diff",
-]
-TARGET_COL = "units_sold"
+# FEATURE_COLS = [
+#     "store_id", "sku_id", "base_price", "promo_flag", "promo_depth",
+#     "final_price", "competitor_price", "holiday_flag", "weather_index",
+#     "day_of_week", "month_of_year", "season",
+#     "sold_yesterday", "sold_last_week",
+#     "final_price_ln", "competitor_price_diff",
+# ]
+# TARGET_COL = "units_sold"
 
 # Margin: revenue - unit_cost*units
 # If unit_cost not supplied, assume 0 (i.e., margin == revenue)
@@ -63,7 +64,6 @@ DEFAULT_UNIT_COST_FALLBACK = 0.0
 # Defaults used in simulation if not carried in the price plan file
 DEFAULT_HOLIDAY_FLAG = 0.0215
 DEFAULT_WEATHER_INDEX = 0.5
-OFFICIAL_MODEL = "forecaster_xgboost_20250909_184948.pkl"
 
 # ---------- Helpers ----------
 

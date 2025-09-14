@@ -21,19 +21,11 @@ import yaml
 
 # --- import your feature function ---
 from features import generate_feature
+from models.schema import FEATURE_COLS, TARGET_COL, OFFICIAL_MODEL
 
 # ------------------ Paths ------------------
 _THIS_DIR = os.path.dirname(os.path.abspath(__file__))
 _DEFAULT_CONSTRAINTS = os.path.join(_THIS_DIR, "constraints.yaml")
-
-# ------------------ Feature schema (must match training) ------------------
-FEATURE_COLS = [
-    "store_id", "sku_id", "base_price", "promo_flag", "promo_depth",
-    "final_price", "competitor_price", "holiday_flag", "weather_index",
-    "day_of_week", "month_of_year", "season",
-    "sold_yesterday", "sold_last_week",
-    "final_price_ln", "competitor_price_diff",
-]
 
 
 # ------------------ Helpers ------------------

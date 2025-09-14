@@ -9,6 +9,7 @@ import pandas as pd
 from sklearn.metrics import mean_squared_error, r2_score
 from sklearn.model_selection import train_test_split
 from xgboost import XGBRegressor
+from models.schema import FEATURE_COLS, TARGET_COL
 
 SEED = 42
 
@@ -16,14 +17,14 @@ SEED = 42
 _THIS_DIR = os.path.dirname(os.path.abspath(__file__))
 
 # Expected schema
-FEATURE_COLS = [
-    'store_id', 'sku_id', 'base_price', 'promo_flag', 'promo_depth',
-    'final_price', 'competitor_price', 'holiday_flag', 'weather_index',
-    'day_of_week', 'month_of_year', 'season',
-    'sold_yesterday', 'sold_last_week', 'final_price_ln',
-    'competitor_price_diff'
-]
-TARGET_COL = 'units_sold'
+# FEATURE_COLS = [
+#     'store_id', 'sku_id', 'base_price', 'promo_flag', 'promo_depth',
+#        'final_price', 'competitor_price', 'holiday_flag', 'weather_index',
+#        'day_of_week', 'month_of_year', 'season',
+#        'sold_yesterday', 'sold_last_week', 'units_sold_ma7', 'units_sold_ma30',
+#        'flag_promo_1stday', 'final_price_ln', 'competitor_price_diff',
+# ]
+# TARGET_COL = 'units_sold'
 
 _MONOTONE = []
 for c in FEATURE_COLS:
