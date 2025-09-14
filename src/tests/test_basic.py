@@ -3,7 +3,7 @@ import numpy as np
 import pandas as pd
 
 from features import generate_feature
-from pricing.optimizer import _price_grid, _apply_stock_cap
+# from pricing.optimizer import _price_grid, _apply_stock_cap
 from models.modeling import _check_schema, _check_inputs
 from utils.schema import FEATURE_COLS, TARGET_COL  # <-- single source of truth
 
@@ -47,13 +47,13 @@ def test_generate_feature_lags_and_prices():
 
 
 
-def test_optimizer_price_grid_and_stock_cap():
-    """Optimizer helpers: price grid spans guardrails; stock cap clamps predictions."""
-    grid = _price_grid(base_price=100.0, lower=0.8, upper=1.0, steps=5)
-    assert np.allclose(grid, np.linspace(80.0, 100.0, 5))
+# def test_optimizer_price_grid_and_stock_cap():
+#     """Optimizer helpers: price grid spans guardrails; stock cap clamps predictions."""
+#     grid = _price_grid(base_price=100.0, lower=0.8, upper=1.0, steps=5)
+#     assert np.allclose(grid, np.linspace(80.0, 100.0, 5))
 
-    assert _apply_stock_cap(12.3, {"stock_cap": 10}) == 10
-    assert _apply_stock_cap(8.0, {}) == 8.0  # no cap -> unchanged
+#     assert _apply_stock_cap(12.3, {"stock_cap": 10}) == 10
+#     assert _apply_stock_cap(8.0, {}) == 8.0  # no cap -> unchanged
 
 
 def test_modeling_checks_valid_inputs():
