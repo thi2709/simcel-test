@@ -1,4 +1,10 @@
 # modeling.py
+"""
+Model training and validation for demand forecasting.
+- Uses XGBoost regressor with monotone constraints.
+- Ensures schema correctness via utils/schema and utils/math_utils.
+- Saves trained model pickle in the same directory.
+"""
 
 import os
 import pickle
@@ -9,31 +15,26 @@ import pandas as pd
 from sklearn.metrics import mean_squared_error, r2_score
 from sklearn.model_selection import train_test_split
 from xgboost import XGBRegressor
-from models.schema import FEATURE_COLS, TARGET_COL
 
-SEED = 42
+from utils.schema import FEATURE_COLS, TARGET_COL
+from utils.constants import SEED
+from utils.math_utils import mape
 
 # Directory of this script
 _THIS_DIR = os.path.dirname(os.path.abspath(__file__))
 
-# Expected schema
-# FEATURE_COLS = [
-#     'store_id', 'sku_id', 'base_price', 'promo_flag', 'promo_depth',
-#        'final_price', 'competitor_price', 'holiday_flag', 'weather_index',
-#        'day_of_week', 'month_of_year', 'season',
-#        'sold_yesterday', 'sold_last_week', 'units_sold_ma7', 'units_sold_ma30',
-#        'flag_promo_1stday', 'final_price_ln', 'competitor_price_diff',
-# ]
-# TARGET_COL = 'units_sold'
-
+# ------------------ Monotone constraints ------------------
+# Ensure final_price and final_price_ln have negative monotonic effect
 _MONOTONE = []
 for c in FEATURE_COLS:
-    if c == "final_price" or c == "final_price_ln":
+    if c in {"final_price", "final_price_ln"}:
         _MONOTONE.append(-1)
     else:
         _MONOTONE.append(0)
 _MONO_TUPLE = "(" + ",".join(str(v) for v in _MONOTONE) + ")"
 
+
+# ------------------ Input checks ------------------
 def _check_schema(X: pd.DataFrame, y: pd.Series):
     """Ensure X has all required features and y matches the expected target."""
     missing_feats = [col for col in FEATURE_COLS if col not in X.columns]
@@ -47,6 +48,7 @@ def _check_schema(X: pd.DataFrame, y: pd.Series):
 
 
 def _check_inputs(X: pd.DataFrame, y: pd.Series):
+    """Type, shape, and NA checks before training/validation."""
     if not isinstance(X, pd.DataFrame):
         raise TypeError("X must be a pandas DataFrame.")
     if X.isnull().any().any():
@@ -58,7 +60,6 @@ def _check_inputs(X: pd.DataFrame, y: pd.Series):
             f"Object dtype columns in X: {bad}. Encode them or convert to category."
         )
 
-    # y = pd.Series(y).ravel()
     if pd.isnull(y).any():
         raise ValueError("y contains NaN values.")
     if len(X) != len(y):
@@ -67,22 +68,16 @@ def _check_inputs(X: pd.DataFrame, y: pd.Series):
     return X, y
 
 
-def _mape(y_true: np.ndarray, y_pred: np.ndarray) -> float:
-    y_true = np.asarray(y_true).ravel()
-    y_pred = np.asarray(y_pred).ravel()
-    mask = y_true != 0
-    if not np.any(mask):
-        return np.nan
-    return float(np.mean(np.abs((y_true[mask] - y_pred[mask]) / y_true[mask])) * 100.0)
-
-
+# ------------------ Training ------------------
 def fit(
     X: pd.DataFrame,
     y: pd.Series,
     test_size: float = 0.2,
-    random_state: int = 42,
+    random_state: int = SEED,
 ) -> str:
-    """Train model, save pickle in same dir as modeling.py, and return filename."""
+    """
+    Train an XGBoost regressor, save pickle in same dir as modeling.py, and return filename.
+    """
     _check_schema(X, y)
     X, y = _check_inputs(X, y)
 
@@ -110,7 +105,7 @@ def fit(
         eval_metric="rmse",
         early_stopping_rounds=200,
         verbosity=0,
-        seed = SEED,
+        seed=SEED,
         monotone_constraints=_MONO_TUPLE,
     )
 
@@ -128,8 +123,12 @@ def fit(
     return filename
 
 
+# ------------------ Validation ------------------
 def validate(model_filename: str, X: pd.DataFrame, y: pd.Series):
-    """Load model and evaluate on given X, y."""
+    """
+    Load model pickle and evaluate on given X, y.
+    Returns dict with r2, rmse, mape_pct.
+    """
     model_path = os.path.join(_THIS_DIR, model_filename)
     if not os.path.exists(model_path):
         raise FileNotFoundError(f"Model file not found: {model_path}")
@@ -144,11 +143,11 @@ def validate(model_filename: str, X: pd.DataFrame, y: pd.Series):
 
     r2 = float(r2_score(y, y_pred))
     rmse = float(np.sqrt(mean_squared_error(y, y_pred)))
-    mape = _mape(y, y_pred)
+    mape_val = mape(y, y_pred)
 
     print(f"Validation metrics for {model_filename}:")
     print(f"  R^2  : {r2:.4f}")
     print(f"  RMSE : {rmse:.6f}")
-    print(f"  MAPE : {mape:.2f}%")
+    print(f"  MAPE : {mape_val:.2f}%")
 
-    return {"r2": r2, "rmse": rmse, "mape_pct": mape}
+    return {"r2": r2, "rmse": rmse, "mape_pct": mape_val}

@@ -5,7 +5,7 @@ import pandas as pd
 from features import generate_feature
 from pricing.optimizer import _price_grid, _apply_stock_cap
 from models.modeling import _check_schema, _check_inputs
-from models.schema import FEATURE_COLS, TARGET_COL  # <-- single source of truth
+from utils.schema import FEATURE_COLS, TARGET_COL  # <-- single source of truth
 
 
 def test_generate_feature_lags_and_prices():

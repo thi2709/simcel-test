@@ -12,5 +12,3 @@ FEATURE_COLS = [
 ]
 
 TARGET_COL = "units_sold"
-
-OFFICIAL_MODEL = 'forecaster_xgboost_20250914_092012.pkl'
