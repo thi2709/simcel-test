@@ -14,17 +14,18 @@ Simple CSV loader with schema checks.
 - Returns a deduplicated, typed DataFrame.
 """
 
-from __future__ import annotations
+# from __future__ import annotations
 
 import os
 import pandas as pd
 import numpy as np
 
 from utils.constants import (
-    DATE_COL, ID_COLS, FLOAT_COLS, FLAG_COLS, RATIO_COLS,
+    DATE_COL, ID_COLS, PRICE_COL, FLOAT_COLS, RATIO_COLS,
     INT_COLS, SET_COL, REQUIRED_COLUMNS,
 )
 
+from utils.io_utils import load_constraints
 
 class DataLoaderError(Exception):
     """Raised when rows are dropped due to validation errors."""
@@ -43,7 +44,7 @@ def _ensure_required_columns(df: pd.DataFrame) -> None:
         raise KeyError(f"Missing required columns: {missing}")
 
 
-def load_data(path: str | None = None) -> pd.DataFrame:
+def load_data(path: str | None = None, constraints_path: str | None = None) -> pd.DataFrame:
     """
     Read CSV and return a validated, cleaned DataFrame.
     If any rows are removed during validation, raises DataLoaderError (after constructing the cleaned df).
@@ -61,30 +62,50 @@ def load_data(path: str | None = None) -> pd.DataFrame:
         infer_datetime_format=True,
     )
 
+    cfg = load_constraints(constraints_path)
+    holiday_flag_default = float(cfg["global"].get("holiday_flag_default", 0.0))
+    weather_index_default = float(cfg["global"].get("weather_index_default", 0.0))
+
+    if not set([DATE_COL] + ID_COLS + [PRICE_COL]).issubset(df.columns):
+        raise ValueError(f"Input file must include {[DATE_COL] + ID_COLS + [PRICE_COL]}")
+
+    if "base_price" not in df.columns:
+        df["base_price"] = df["final_price"]
+    if "promo_flag" not in df.columns:
+        df["promo_flag"] = (df["final_price"] < df["base_price"]).astype(int)
+    if "promo_depth" not in df.columns:
+        df["promo_depth"] = (df["base_price"] - df["final_price"]) / df["base_price"]
+        df.loc[df["promo_flag"] == 0, "promo_depth"] = 0.0
+    if "holiday_flag" not in df.columns:
+        df["holiday_flag"] = holiday_flag_default
+    if "weather_index" not in df.columns:
+        df["weather_index"] = weather_index_default
+    if "competitor_price" not in df.columns:
+        df["competitor_price"] = df["base_price"]
+    if "units_sold" not in df.columns:
+        df["units_sold"] = 0
+    if "stockout_flag" not in df.columns:
+        df["stockout_flag"] = 0
+
     _ensure_required_columns(df)
     original_len = len(df)
 
     # ---------- Coercions & validation ----------
     invalid_mask = df[DATE_COL].isna()
 
-    # IDs & SET_COL: read as string first to validate; IDs will become category later
-    for c in ID_COLS + [SET_COL]:
+    # IDs: read as string first to validate; IDs will become category later
+    for c in ID_COLS:
         df[c] = df[c].astype("string")
         invalid_mask |= df[c].isna()
 
     # floats: allow NA; just coerce
-    for c in FLOAT_COLS:
+    for c in FLOAT_COLS + [PRICE_COL]:
         df[c] = pd.to_numeric(df[c], errors="coerce")
-
-    # flags: must be 0/1
-    for c in FLAG_COLS:
-        df[c] = pd.to_numeric(df[c], errors="coerce")
-        invalid_mask |= ~df[c].isin([0, 1])
 
     # ratios: must be within [0,1] and non-null
     for c in RATIO_COLS:
         df[c] = pd.to_numeric(df[c], errors="coerce")
-        invalid_mask |= df[c].isna() | (df[c] < 0) | (df[c] > 1)
+        invalid_mask |= df[c].isna() | (df[c] > 1) | (df[c] < 0)
 
     # ints: required and non-null
     for c in INT_COLS:
@@ -105,14 +126,9 @@ def load_data(path: str | None = None) -> pd.DataFrame:
     for c in ID_COLS:
         df[c] = df[c].astype("category")
 
-    # keep SET_COL as string
-    df[SET_COL] = df[SET_COL].astype("string")
-
     # numeric dtypes
-    for c in FLOAT_COLS + RATIO_COLS:
+    for c in FLOAT_COLS + [PRICE_COL] + RATIO_COLS:
         df[c] = df[c].astype("float64")
-    for c in FLAG_COLS:
-        df[c] = df[c].astype("Int64")
     for c in INT_COLS:
         df[c] = df[c].astype("Int64")
 

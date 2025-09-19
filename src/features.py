@@ -18,11 +18,11 @@ Creates:
 - Optional one-hot for time encodings (numeric; safe for modeling)
 """
 
-from __future__ import annotations
+# from __future__ import annotations
 
 import numpy as np
 import pandas as pd
-from typing import List
+# from typing import List
 
 from utils.constants import DAY_ORDER, MONTH_ORDER, SEASON_ORDER
 

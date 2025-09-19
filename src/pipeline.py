@@ -28,7 +28,7 @@ from data_loader import load_data
 from models.modeling import fit as model_fit, validate as model_validate
 from pricing.optimizer import optimize_price_plan
 
-from utils.constants import OFFICIAL_MODEL, SEED
+from utils.constants import OFFICIAL_MODEL, DATE_COL
 from utils.schema import FEATURE_COLS, TARGET_COL
 from utils.io_utils import load_constraints, resolve_model_path, load_model
 
@@ -44,37 +44,38 @@ def _ensure_feature_cols(df: pd.DataFrame) -> pd.DataFrame:
     return df[FEATURE_COLS].copy()
 
 
-def _compute_margin(revenue: float, units: float, unit_cost: float) -> float:
-    try:
-        return float(revenue - unit_cost * units)
-    except Exception:
-        return float(revenue)
+# def _compute_margin(revenue: float, units: float, unit_cost: float) -> float:
+#     try:
+#         return float(revenue - unit_cost * units)
+#     except Exception:
+#         return float(revenue)
 
 
 # ---------- Commands ----------
 def cmd_train(train_start: str, train_end: str, test_start: str, test_end: str, train_csv: Optional[str] = None):
-    df = load_data() if train_csv is None else pd.read_csv(train_csv, parse_dates=["date"])
+    # df = load_data() if train_csv is None else pd.read_csv(train_csv, parse_dates=["date"])
+    df = load_data(train_csv)
     df = df[df.stockout_flag == 0].reset_index(drop = True)
     print(f"Loaded {len(df)} rows")
 
     # df["date"] = pd.to_datetime(df["date"], errors="coerce")
-    df_train = df[(df["date"] >= pd.to_datetime(train_start)) & (df["date"] <= pd.to_datetime(train_end))]
-    print('df_train', df_train)
-    df_test = df[(df["date"] >= pd.to_datetime(test_start)) & (df["date"] <= pd.to_datetime(test_end))]
-    print('df_test', df_test)
+    df_train = df[(df[DATE_COL] >= pd.to_datetime(train_start)) & (df[DATE_COL] <= pd.to_datetime(train_end))]
+    # print('df_train', df_train)
+    df_test = df[(df[DATE_COL] >= pd.to_datetime(test_start)) & (df[DATE_COL] <= pd.to_datetime(test_end))]
+    # print('df_test', df_test)
     if df_train.empty or df_test.empty:
         raise ValueError("Empty train/test after date filtering. Check ranges.")
 
-    feats_train = generate_feature(df_train)
-    feats_test = generate_feature(df_test)
+    df_train_transform = generate_feature(df_train)
+    df_test_transform = generate_feature(df_test)
 
-    X_train = _ensure_feature_cols(feats_train)
+    X_train = _ensure_feature_cols(df_train_transform)
     print('X_train',X_train)
-    y_train = df_train[TARGET_COL]
+    y_train = df_train_transform[TARGET_COL]
     print('y_train',y_train)
 
-    X_test = _ensure_feature_cols(feats_test)
-    y_test = df_test[TARGET_COL]
+    X_test = _ensure_feature_cols(df_test_transform)
+    y_test = df_test_transform[TARGET_COL]
 
     model_filename = model_fit(X_train, y_train)
     print(f"✅ Saved model as: {model_filename}")
@@ -86,38 +87,40 @@ def cmd_train(train_start: str, train_end: str, test_start: str, test_end: str, 
 
 
 def cmd_simulate(price_plan_path: str, horizon: int, out_csv: Optional[str], constraints_path: Optional[str]):
-    model = load_model(resolve_model_path(OFFICIAL_MODEL, base_dir=os.path.join(os.path.dirname(__file__), "models")))
+    model = load_model(OFFICIAL_MODEL)
     cfg = load_constraints(constraints_path)
 
-    holiday_flag_default = float(cfg["global"].get("holiday_flag_default", 0.0))
-    weather_index_default = float(cfg["global"].get("weather_index_default", 0.0))
+    # holiday_flag_default = float(cfg["global"].get("holiday_flag_default", 0.0))
+    # weather_index_default = float(cfg["global"].get("weather_index_default", 0.0))
     unit_cost_map = {sku: float(v.get("unit_cost", 0.0)) for sku, v in cfg.get("skus", {}).items()}
 
-    plan = pd.read_csv(price_plan_path)
-    if not {"date", "store_id", "sku_id", "final_price"}.issubset(plan.columns):
-        raise ValueError("price_plan must include date, store_id, sku_id, final_price")
+    plan = load_data(price_plan_path)
+    # if not {DATE_COL, "store_id", "sku_id", "final_price"}.issubset(plan.columns):
+    #     raise ValueError("price_plan must include date, store_id, sku_id, final_price")
 
-    if "baseline_price" in plan.columns:
-        plan["base_price"] = plan["baseline_price"]
-    elif "base_price" not in plan.columns:
-        plan["base_price"] = plan["final_price"]
+    # if "baseline_price" in plan.columns:
+    #     plan["base_price"] = plan["baseline_price"]
+    # elif "base_price" not in plan.columns:
+    #     plan["base_price"] = plan["final_price"]
 
-    if "promo_flag" not in plan.columns:
-        plan["promo_flag"] = (plan["final_price"] < plan["base_price"]).astype(int)
-    if "promo_depth" not in plan.columns:
-        plan["promo_depth"] = (plan["base_price"] - plan["final_price"]) / plan["base_price"]
-        plan.loc[plan["promo_flag"] == 0, "promo_depth"] = 0.0
+    # if "promo_flag" not in plan.columns:
+    #     plan["promo_flag"] = (plan["final_price"] < plan["base_price"]).astype(int)
+    # if "promo_depth" not in plan.columns:
+    #     plan["promo_depth"] = (plan["base_price"] - plan["final_price"]) / plan["base_price"]
+    #     plan.loc[plan["promo_flag"] == 0, "promo_depth"] = 0.0
 
-    plan["holiday_flag"] = holiday_flag_default
-    plan["weather_index"] = weather_index_default
-    if "competitor_price" not in plan.columns:
-        plan["competitor_price"] = plan["base_price"]
+    # if "holiday_flag" not in plan.columns:
+    #     plan["holiday_flag"] = holiday_flag_default
+    # if "weather_index" not in plan.columns:
+    #     plan["weather_index"] = weather_index_default
+    # if "competitor_price" not in plan.columns:
+    #     plan["competitor_price"] = plan["base_price"]
 
-    plan["units_sold"] = np.nan
-    plan["date"] = pd.to_datetime(plan["date"], errors="coerce")
+    # plan["units_sold"] = np.nan
+    # plan[DATE_COL] = pd.to_datetime(plan[DATE_COL], errors="coerce")
     if horizon and horizon > 0:
-        start_min = plan["date"].min()
-        plan = plan[plan["date"] < (start_min + pd.Timedelta(days=int(horizon)))]
+        start_min = plan[DATE_COL].min()
+        plan = plan[plan[DATE_COL] < (start_min + pd.Timedelta(days=int(horizon)))]
 
     feats = generate_feature(plan)
     X = _ensure_feature_cols(feats)
@@ -128,7 +131,7 @@ def cmd_simulate(price_plan_path: str, horizon: int, out_csv: Optional[str], con
     margin = revenue - plan["sku_id"].map(lambda s: unit_cost_map.get(s, 0.0)).to_numpy() * units_pred
 
     result = pd.DataFrame({
-        "date": plan["date"].dt.date.astype(str),
+        DATE_COL: plan[DATE_COL].dt.date.astype(str),
         "store_id": plan["store_id"],
         "sku_id": plan["sku_id"],
         "final_price": plan["final_price"].astype(float),

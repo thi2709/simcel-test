@@ -118,7 +118,7 @@ def optimize_price_plan(
                     "best_promo_units": best_units,
                     "best_promo_revenue": best_rev,
                     "best_promo_depth": best_depth,
-                    "baseline_price": base_price,
+                    "base_price": base_price,
                     "baseline_units": base_units,
                     "baseline_revenue": base_rev,
                     "uplift_revenue": uplift,
@@ -151,7 +151,7 @@ def optimize_price_plan(
                 )
             else:
                 final_price, pred_units, revenue, is_promo, promo_depth = (
-                    r["baseline_price"], r["baseline_units"], r["baseline_revenue"], 0, 0.0
+                    r["base_price"], r["baseline_units"], r["baseline_revenue"], 0, 0.0
                 )
 
             plans.append({
@@ -163,7 +163,7 @@ def optimize_price_plan(
                 "pred_units": float(pred_units),
                 "revenue": float(revenue),
                 "is_promo": is_promo,
-                "baseline_price": float(r["baseline_price"]),
+                "base_price": float(r["base_price"]),
                 "baseline_units": float(r["baseline_units"]),
                 "baseline_revenue": float(r["baseline_revenue"]),
                 "uplift_revenue": float(revenue - r["baseline_revenue"]),
@@ -191,7 +191,7 @@ def optimize_price_plan(
         out_path = os.path.join(os.path.dirname(__file__), fname)
 
         export_df = plan_df[[
-            "date", "store_id", "sku_id", "final_price", "promo_depth", "is_promo", "baseline_price"
+            "date", "store_id", "sku_id", "final_price", "promo_depth", "is_promo", "base_price"
         ]].copy()
         export_df = export_df.rename(columns={"is_promo": "promo_flag"})
         export_df.to_csv(out_path, index=False)
