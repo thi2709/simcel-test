@@ -43,14 +43,6 @@ def _ensure_feature_cols(df: pd.DataFrame) -> pd.DataFrame:
             df[c] = df[c].astype("category")
     return df[FEATURE_COLS].copy()
 
-
-# def _compute_margin(revenue: float, units: float, unit_cost: float) -> float:
-#     try:
-#         return float(revenue - unit_cost * units)
-#     except Exception:
-#         return float(revenue)
-
-
 # ---------- Commands ----------
 def cmd_train(train_start: str, train_end: str, test_start: str, test_end: str, train_csv: Optional[str] = None):
     # df = load_data() if train_csv is None else pd.read_csv(train_csv, parse_dates=["date"])
@@ -90,34 +82,10 @@ def cmd_simulate(price_plan_path: str, horizon: int, out_csv: Optional[str], con
     model = load_model(OFFICIAL_MODEL)
     cfg = load_constraints(constraints_path)
 
-    # holiday_flag_default = float(cfg["global"].get("holiday_flag_default", 0.0))
-    # weather_index_default = float(cfg["global"].get("weather_index_default", 0.0))
     unit_cost_map = {sku: float(v.get("unit_cost", 0.0)) for sku, v in cfg.get("skus", {}).items()}
 
     plan = load_data(price_plan_path)
-    # if not {DATE_COL, "store_id", "sku_id", "final_price"}.issubset(plan.columns):
-    #     raise ValueError("price_plan must include date, store_id, sku_id, final_price")
-
-    # if "baseline_price" in plan.columns:
-    #     plan["base_price"] = plan["baseline_price"]
-    # elif "base_price" not in plan.columns:
-    #     plan["base_price"] = plan["final_price"]
-
-    # if "promo_flag" not in plan.columns:
-    #     plan["promo_flag"] = (plan["final_price"] < plan["base_price"]).astype(int)
-    # if "promo_depth" not in plan.columns:
-    #     plan["promo_depth"] = (plan["base_price"] - plan["final_price"]) / plan["base_price"]
-    #     plan.loc[plan["promo_flag"] == 0, "promo_depth"] = 0.0
-
-    # if "holiday_flag" not in plan.columns:
-    #     plan["holiday_flag"] = holiday_flag_default
-    # if "weather_index" not in plan.columns:
-    #     plan["weather_index"] = weather_index_default
-    # if "competitor_price" not in plan.columns:
-    #     plan["competitor_price"] = plan["base_price"]
-
-    # plan["units_sold"] = np.nan
-    # plan[DATE_COL] = pd.to_datetime(plan[DATE_COL], errors="coerce")
+    
     if horizon and horizon > 0:
         start_min = plan[DATE_COL].min()
         plan = plan[plan[DATE_COL] < (start_min + pd.Timedelta(days=int(horizon)))]

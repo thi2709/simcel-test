@@ -12,7 +12,7 @@ It includes modules for data loading, feature engineering, modeling (XGBoost), a
 - Current train/test split cannot model Oct,Nov,Dec seasonality which lower test performance.
 - XGBoost is selected for the interest of time, after training it is found that this is not the optimal solution and is subjected to further improvements.
 - The model performance is currently overfitting; it is subject to improvements by including stronger regularization (less dependent on seasonality), more feature engineering (MA price, unit cost, percentage margin, etc.), try alternative learners, train separate forecaster for each SKU, modeling price elasticity, and feature selection.
-- Only the official model (`forecaster_xgboost_20250909_221509.pkl`) is used accross pipeline. It is hard-coded in both `optimizer.py` and `pipeline.py`.
+- Only the official model (`forecaster_xgboost_20250914_223932.pkl`) is used accross pipeline. It is hard-coded in `constants.py`.
 - PPrice–demand relationship is monitored to be negative (higher price → lower demand).
 
 ### 2. Optimizer
@@ -23,7 +23,7 @@ It includes modules for data loading, feature engineering, modeling (XGBoost), a
 - `stock_cap` defaults to **100** unless specified per SKU.
 - Each SKU × Store is capped at **X promo days per horizon** (configured in `constraints.yaml`). This differs from assumptions in the provided dataset.
 - Minimum price band is **0.6 × base_price**.
-- The optimizer is greedy: it selects top-K promo days with discrete discount but does not guarantee a global optimum.
+- The optimizer is greedy: it selects top-K promo days with discrete discount but does not guarantee a global optimum. But I find it runs very fast.
 - Dataset assumptions (promo scheduling, stock caps) may not perfectly match real-world data. 
 
 ---
@@ -50,7 +50,7 @@ python pipeline.py train   --train-start 2024-01-01   --train-end   2024-09-30  
 Simulate the performance of a price plan over a horizon:
 
 ```bash
-python pipeline.py simulate   --horizon 14   --price-plan pricing/price_plan_20250909_14days_20250909_190508.csv   --out simulation_result.csv
+python pipeline.py simulate   --horizon 30   --price-plan pricing/price_plan_20240301_30days_20250919_180322.csv   --out simulation_result.csv
 ```
 
 - Outputs predicted units, revenue, and margin.
