@@ -146,11 +146,11 @@ def optimize_price_plan(
 
         for _, r in g.iterrows():
             if r["date"] in promo_days:
-                final_price, pred_units, revenue, is_promo, promo_depth = (
+                final_price, pred_units, revenue, promo_flag, promo_depth = (
                     r["best_promo_price"], r["best_promo_units"], r["best_promo_revenue"], 1, r["best_promo_depth"]
                 )
             else:
-                final_price, pred_units, revenue, is_promo, promo_depth = (
+                final_price, pred_units, revenue, promo_flag, promo_depth = (
                     r["base_price"], r["baseline_units"], r["baseline_revenue"], 0, 0.0
                 )
 
@@ -162,7 +162,7 @@ def optimize_price_plan(
                 "promo_depth": float(promo_depth),
                 "pred_units": float(pred_units),
                 "revenue": float(revenue),
-                "is_promo": is_promo,
+                "promo_flag": promo_flag,
                 "base_price": float(r["base_price"]),
                 "baseline_units": float(r["baseline_units"]),
                 "baseline_revenue": float(r["baseline_revenue"]),
@@ -191,9 +191,8 @@ def optimize_price_plan(
         out_path = os.path.join(os.path.dirname(__file__), fname)
 
         export_df = plan_df[[
-            "date", "store_id", "sku_id", "final_price", "promo_depth", "is_promo", "base_price"
+            "date", "store_id", "sku_id", "final_price", "promo_depth", "promo_flag", "base_price"
         ]].copy()
-        export_df = export_df.rename(columns={"is_promo": "promo_flag"})
         export_df.to_csv(out_path, index=False)
         print(f"Exported price plan to {out_path}")
     
