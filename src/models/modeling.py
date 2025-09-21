@@ -74,9 +74,18 @@ def fit(
     y: pd.Series,
     test_size: float = 0.2,
     random_state: int = SEED,
-) -> str:
+    save_model: bool = True,
+) -> str | XGBRegressor:
     """
-    Train an XGBoost regressor, save pickle in same dir as modeling.py, and return filename.
+    Train an XGBoost regressor. 
+    
+    If save_model=True (default):
+        - Save pickle in same dir as modeling.py.
+        - Return the saved filename (str).
+    
+    If save_model=False:
+        - Do not save to disk.
+        - Return the trained model object directly.
     """
     _check_schema(X, y)
     X, y = _check_inputs(X, y)
@@ -115,12 +124,14 @@ def fit(
         eval_set=[(X_val, y_val)],
     )
 
-    filename = f"forecaster_xgboost_{datetime.now().strftime('%Y%m%d_%H%M%S')}.pkl"
-    save_path = os.path.join(_THIS_DIR, filename)
-    with open(save_path, "wb") as f:
-        pickle.dump(model, f)
-
-    return filename
+    if save_model:
+        filename = f"forecaster_xgboost_{datetime.now().strftime('%Y%m%d_%H%M%S')}.pkl"
+        save_path = os.path.join(_THIS_DIR, filename)
+        with open(save_path, "wb") as f:
+            pickle.dump(model, f)
+        return filename
+    else:
+        return model
 
 
 # ------------------ Validation ------------------

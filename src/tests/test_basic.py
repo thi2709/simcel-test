@@ -103,6 +103,7 @@ import glob
 import pandas as pd
 import numpy as np
 import pytest
+from xgboost import XGBRegressor
 
 # Pipeline pieces
 from data_loader import load_data
@@ -190,8 +191,8 @@ def test_pipeline_smoke_data_loader_to_modeling(tmp_path):
 
     # 5) Fit (tiny model on tiny data) — smoke only; expect no exceptions
     # NOTE: model config is fixed in modeling.py; this just asserts it runs.
-    model_filename = fit(X_checked, y_checked, test_size=0.5)
-    assert isinstance(model_filename, str) and model_filename.endswith(".pkl")
+    model = fit(X_checked, y_checked, test_size=0.5, save_model=False)
+    assert isinstance(model, XGBRegressor)
 
 
 def test_optimizer_runs_smoke(tmp_path, monkeypatch):
@@ -225,8 +226,7 @@ def test_optimizer_runs_smoke(tmp_path, monkeypatch):
         "promo_depth",
         "base_price",
         "pred_units",
-        # "revenue",
-        # "margin",
+        "revenue",
     }
     assert expected_cols.issubset(set(map(str, plan_df.columns))), (
         f"optimizer output missing columns: {expected_cols - set(plan_df.columns)}"
